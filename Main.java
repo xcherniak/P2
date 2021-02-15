@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.IOError;
 
 public class Main {
     public static void main(String[] args) {
@@ -12,7 +13,7 @@ public class Main {
                 break;
             }
             else {
-                // FIXME This is where we want to make the print come out
+                System.out.println(t);
             }   
         } 
         } catch (IOException e) {

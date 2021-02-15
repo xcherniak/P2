@@ -27,7 +27,9 @@ Identifier = [a-z][_A-Za-z0-9]*
 IntegerLiteral = [0-9]+
 
 Whitespace = [ \t\n]
-Keyword = [a-z][a-z]+
+Keyword = [a-z]*
+
+Type = [A-Z][a-z|A-Z]* 
 
 
 %state STRING
@@ -58,43 +60,42 @@ Keyword = [a-z][a-z]+
 "."                 { return token(Tok.DOT);}
 
 //comment
-"(*"                { comment_nesting = 1; yybegin(comment);}
-"--"                {/* ignore */}
+"(*"                { int comment_nesting = 1; yybegin(COMMENT);}
+"--"                {/* ignore */} // might have to ignore rest of line
 
 //string
-"\""                { yybegin(STRING)}
+"\""                { yybegin(STRING);}
 
 {Keyword}           { yybegin(KEYWORD); }
 {Identifier}        { return token(Tok.IDENTIFIER, yytext()); }
 {IntegerLiteral}    { return token(Tok.INT, yytext()); }
+{Type}              { return token(Tok.TYPE, yytext()); }
 
 {Whitespace}        { /* ignore */ }
 }
-
+/*
 //create a string state
 <STRING> {
     //Watch the class video about the string.toString() part. Not entirely sure how or if that works
     //I also don't know if all of this has to be in unicode?
-    \"                             { yybegin(YYINITIAL);
-                                    return token(Tok.STRING,
-                                    string.toString()); }           //This line I am not 100% sure about
-    [^\n\r\"\\\0]+                   { string.append( yytext() ); }
-    \\t                            { //Make this an error }
-    \\u000A                        { //Make this an error }
-    \\u0000                        { //Make this an error you can't have null}
-    \\r                            { //These don't exist make error }
-    \\\"                           { string.append('\"'); }
+    "\""                           { yybegin(YYINITIAL); return token(Tok.STRING); } //This line I am not 100% sure about
+    "[^\n\r\"\\\0]+"               { string.append( yytext() ); }
+    \\t                          { return token(Tok.ERROR);}
+    \\u000A                      {  } // make error
+    \\u0000                     { } // make error
+    \\r                         {  } // make error
+    \\\"                         { string.append('\"'); } // took out quote after \\\
     \\                             { string.append('\\'); }
 }
-
+*/
+/*
 <COMMENT> {
-
-    "(*"                            {int comment_nesting ++;}
+    "(*"                            {comment_nesting++;}
     
-    "*)"                            {comment_nesting--; if (comment_nesting == 0) {yybegin(YYINITIAL);}}
+    "*)"                            {comment_nesting--; if(comment_nesting == 0) {yybegin(YYINITIAL);}}
                                     
 }
-
+*/
 <KEYWORD> {
     "class"                         {return token(Tok.CLASS);}
     "else"                          {return token(Tok.ELSE);}
@@ -115,9 +116,6 @@ Keyword = [a-z][a-z]+
     "not"                           {return token(Tok.NOT);}
     "true"                          {return token(Tok.TRUE);}
     "false"                         {return token(Tok.FALSE);}
-
+    //[^]                           {return token()}
 }
 
-<IDENTIFIER> {
-    
-}
