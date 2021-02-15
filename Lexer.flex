@@ -20,7 +20,7 @@
         return new Token(type, yyline+1, value);
     }
 
-    int comment_nesting = 0;
+    int commentCount = 0;
 
 %}
 
@@ -62,40 +62,46 @@ Type = [A-Z][_A-Za-z0-9]*
 ";"                 { return token(Tok.SEMI);}
 "~"                 { return token(Tok.TILDE);}
 "."                 { return token(Tok.DOT);}
-"class"                         {return token(Tok.CLASS);} 
-"else"                          {return token(Tok.ELSE);}
-"fi"                            {return token(Tok.FI);}
-"if"                            {return token(Tok.IF);}
-"in"                            {return token(Tok.IN);}
-"inherits"                      {return token(Tok.INHERITS);}
-"isvoid"                        {return token(Tok.ISVOID);}
-"let"                           {return token(Tok.LET);}
-"loop"                          {return token(Tok.LOOP);}
-"pool"                          {return token(Tok.POOL);}
-"then"                          {return token(Tok.THEN);}
-"while"                         {return token(Tok.WHILE);}
-"case"                          {return token(Tok.CASE);}
-"esac"                          {return token(Tok.ESAC);}
-"new"                           {return token(Tok.NEW);}
-"of"                            {return token(Tok.OF);}
-"not"                           {return token(Tok.NOT);}
-"true"                          {return token(Tok.TRUE);}
-"false"                         {return token(Tok.FALSE);}
+"class"             { return token(Tok.CLASS);} 
+"else"              { return token(Tok.ELSE);}
+"fi"                { return token(Tok.FI);}
+"if"                { return token(Tok.IF);}
+"in"                { return token(Tok.IN);}
+"inherits"          { return token(Tok.INHERITS);}
+"isvoid"            { return token(Tok.ISVOID);}
+"let"               { return token(Tok.LET);}
+"loop"              { return token(Tok.LOOP);}
+"pool"              { return token(Tok.POOL);}
+"then"              { return token(Tok.THEN);}
+"while"             { return token(Tok.WHILE);}
+"case"              { return token(Tok.CASE);}
+"esac"              { return token(Tok.ESAC);}
+"new"               { return token(Tok.NEW);}
+"of"                { return token(Tok.OF);}
+"not"               { return token(Tok.NOT);}
+"t"(r|R)(u|U)(e|E)  { return token(Tok.TRUE);}
+"f"(a|A)(l|L)(s|S)(e|E) { return token(Tok.FALSE);}
+":"                 { return token(Tok.COLON);}
+"="                 { return token(Tok.EQUALS);}
 
-
-
-//comment
-"(*"                { comment_nesting++; yybegin(COMMENT);}
+"(*".*              { commentCount = 1; yybegin(COMMENT);}
 
 
 //string
 "\""                { yybegin(STRING);}
 
-{Comment}           {/* ingore */}
 
 
 {Identifier}        { return token(Tok.IDENTIFIER, yytext()); }
-{IntegerLiteral}    { return token(Tok.INT, yytext()); } // try catch stringtoint
+{IntegerLiteral}    { 
+                        try {
+                            Integer.parseInt(yytext());
+                        } catch(Exception x) {
+                            System.out.println("ERROR: " + yyline+1 + " Lexer: too large int " + yytext());
+                            System.exit(1);
+                        }
+                        return token(Tok.INT, yytext()); 
+                    } 
 {Type}              { return token(Tok.TYPE, yytext()); }
 
 {Whitespace}        { /* ignore */ }
@@ -120,18 +126,19 @@ Type = [A-Z][_A-Za-z0-9]*
 }
 */
 
-/*
+
 <COMMENT> {
-    "(*"                            {comment_nesting++;}
+    "(*".*                            { commentCount++; } // .* allows for (*comment 
     
-    "*)"                            {comment_nesting--; if(comment_nesting == 0) {yybegin(YYINITIAL);}}
+    "*)"                            {commentCount--;
+                                    if (commentCount == 0) 
+                                        yybegin(YYINITIAL);}
 
-    .*                              {}
-                                    
+    [^]                             { /*ignore*/ }                           
 }
-*/
 
 
-[^] {System.out.println("ERROR: " + yyline+1 + " Lexer: invalid character: " + yytext()); 
-    System.exit(1);}
+
+    [^] {System.out.println("ERROR: " + yyline+1 + " Lexer: invalid character: " + yytext()); 
+        System.exit(1);}
 
