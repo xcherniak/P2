@@ -1,10 +1,25 @@
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.IOError;
+import java.io.File;
+import java.io.FileReader;
+
+/*TODO 
+Cody:
+nested comments 
+int error catching
+true/flase
+
+Xaiver:
+strings
+main working with input files
+*/
+
 
 public class Main {
     public static void main(String[] args) {
         Lexer l = new Lexer(new InputStreamReader(System.in));
+        //Lexer l = new Lexer(new FileReader(new File(args[0])));
 
         try{
             while (true) {
@@ -13,7 +28,7 @@ public class Main {
                 break;
             }
             else {
-                System.out.println(t);
+                System.out.print(t);
             }   
         } 
         } catch (IOException e) {

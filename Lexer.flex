@@ -6,7 +6,7 @@
 %class Lexer     // Name of the class to produce with this flex def
 %unicode         // Defines the charset
 %line            // Switch on line counting
-
+%column
 %type Token      // specify the return of the tokens
 
 %{
@@ -20,22 +20,26 @@
         return new Token(type, yyline+1, value);
     }
 
+    int comment_nesting = 0;
+
 %}
 
 // macro/constants regex for different token types
 Identifier = [a-z][_A-Za-z0-9]*
 IntegerLiteral = [0-9]+
 
-Whitespace = [ \t\n]
-Keyword = [a-z]*
+// true or false
 
-Type = [A-Z][a-z|A-Z]* 
+Whitespace = [ \t\n]
+Comment = "--".*[\n]
+
+Type = [A-Z][_A-Za-z0-9]*
 
 
 %state STRING
 %state COMMENT
-%state KEYWORD
-%state IDENTIFIER
+
+
 
 %%
 
@@ -58,20 +62,47 @@ Type = [A-Z][a-z|A-Z]*
 ";"                 { return token(Tok.SEMI);}
 "~"                 { return token(Tok.TILDE);}
 "."                 { return token(Tok.DOT);}
+"class"                         {return token(Tok.CLASS);} 
+"else"                          {return token(Tok.ELSE);}
+"fi"                            {return token(Tok.FI);}
+"if"                            {return token(Tok.IF);}
+"in"                            {return token(Tok.IN);}
+"inherits"                      {return token(Tok.INHERITS);}
+"isvoid"                        {return token(Tok.ISVOID);}
+"let"                           {return token(Tok.LET);}
+"loop"                          {return token(Tok.LOOP);}
+"pool"                          {return token(Tok.POOL);}
+"then"                          {return token(Tok.THEN);}
+"while"                         {return token(Tok.WHILE);}
+"case"                          {return token(Tok.CASE);}
+"esac"                          {return token(Tok.ESAC);}
+"new"                           {return token(Tok.NEW);}
+"of"                            {return token(Tok.OF);}
+"not"                           {return token(Tok.NOT);}
+"true"                          {return token(Tok.TRUE);}
+"false"                         {return token(Tok.FALSE);}
+
+
 
 //comment
-"(*"                { int comment_nesting = 1; yybegin(COMMENT);}
-"--"                {/* ignore */} // might have to ignore rest of line
+"(*"                { comment_nesting++; yybegin(COMMENT);}
+
 
 //string
 "\""                { yybegin(STRING);}
 
-{Keyword}           { yybegin(KEYWORD); }
+{Comment}           {/* ingore */}
+
+
 {Identifier}        { return token(Tok.IDENTIFIER, yytext()); }
-{IntegerLiteral}    { return token(Tok.INT, yytext()); }
+{IntegerLiteral}    { return token(Tok.INT, yytext()); } // try catch stringtoint
 {Type}              { return token(Tok.TYPE, yytext()); }
 
 {Whitespace}        { /* ignore */ }
+
+
+
+
 }
 /*
 //create a string state
@@ -79,43 +110,28 @@ Type = [A-Z][a-z|A-Z]*
     //Watch the class video about the string.toString() part. Not entirely sure how or if that works
     //I also don't know if all of this has to be in unicode?
     "\""                           { yybegin(YYINITIAL); return token(Tok.STRING); } //This line I am not 100% sure about
-    "[^\n\r\"\\\0]+"               { string.append( yytext() ); }
+    [^\n\r\"\\\0]+               { string.append( yytext() ); }
     \\t                          { return token(Tok.ERROR);}
-    \\u000A                      {  } // make error
-    \\u0000                     { } // make error
+    [\u000A]                      {  } // make error
+    [\u0000]                   { } // make error
     \\r                         {  } // make error
     \\\"                         { string.append('\"'); } // took out quote after \\\
     \\                             { string.append('\\'); }
 }
 */
+
 /*
 <COMMENT> {
     "(*"                            {comment_nesting++;}
     
     "*)"                            {comment_nesting--; if(comment_nesting == 0) {yybegin(YYINITIAL);}}
+
+    .*                              {}
                                     
 }
 */
-<KEYWORD> {
-    "class"                         {return token(Tok.CLASS);}
-    "else"                          {return token(Tok.ELSE);}
-    "fi"                            {return token(Tok.FI);}
-    "if"                            {return token(Tok.IF);}
-    "in"                            {return token(Tok.IN);}
-    "inherits"                      {return token(Tok.INHERITS);}
-    "isvoid"                        {return token(Tok.ISVOID);}
-    "let"                           {return token(Tok.LET);}
-    "loop"                          {return token(Tok.LOOP);}
-    "pool"                          {return token(Tok.POOL);}
-    "then"                          {return token(Tok.THEN);}
-    "while"                         {return token(Tok.WHILE);}
-    "case"                          {return token(Tok.CASE);}
-    "esac"                          {return token(Tok.ESAC);}
-    "new"                           {return token(Tok.NEW);}
-    "of"                            {return token(Tok.OF);}
-    "not"                           {return token(Tok.NOT);}
-    "true"                          {return token(Tok.TRUE);}
-    "false"                         {return token(Tok.FALSE);}
-    //[^]                           {return token()}
-}
+
+
+[^] {System.out.println("ERROR: " + yyline+1 + " Lexer: invalid character: " + yytext()); 
+    System.exit(1);}
 
