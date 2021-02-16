@@ -117,7 +117,7 @@ Type = [A-Z][_A-Za-z0-9]*
     //Watch the class video about the string.toString() part. Not entirely sure how or if that works
     //I also don't know if all of this has to be in unicode?
     "\""                        { yybegin(YYINITIAL); return token(Tok.STRING,string.toString()); } //This line I am not 100% sure about
-    //[^\n\r\"\\\0]+              { string.append( yytext() ); }
+    [^\n\r\"\\\0]+              { string.append( yytext() ); }
     \\t                         { string.append('\t')}
     [\u000A]                    { printOutError(yyline,yytext()); System.exit(1); } // make error
     [\u0000]                    { printOutError(yyline,yytext()); System.exit(1); } // make error
